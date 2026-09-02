@@ -1,0 +1,13 @@
+backend:
+  replicas: 2
+  env:
+    ENVIRONMENT: staging
+    LOG_LEVEL: INFO
+
+frontend:
+  replicas: 2
+
+ingress:
+  host: staging.taskmanager.example.com
+  apiHost: staging-api.taskmanager.example.com
+  tls: true

@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "taskmanager.fullname" . }}-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "taskmanager.fullname" . }}-redis
+  template:
+    metadata:
+      labels:
+        app: {{ include "taskmanager.fullname" . }}-redis
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image }}
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "taskmanager.fullname" . }}-redis
+spec:
+  selector:
+    app: {{ include "taskmanager.fullname" . }}-redis
+  ports:
+    - port: 6379

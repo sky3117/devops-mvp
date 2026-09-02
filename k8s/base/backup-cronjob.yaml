@@ -1,0 +1,34 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: taskmanager
+spec:
+  schedule: "0 2 * * *" # every day at 2 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: pg-backup
+              image: postgres:16-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  pg_dump -h postgres -U taskuser -d taskdb -F c -f /backup/taskdb-$(date +%Y%m%d-%H%M%S).dump
+                  aws s3 cp /backup/*.dump s3://taskmanager-backups/postgres/
+                  find /backup -name "*.dump" -mtime +7 -delete
+              env:
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: backend-secrets
+                      key: DATABASE_URL
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backup
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-storage
+              emptyDir: {}

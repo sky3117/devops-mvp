@@ -1,0 +1,37 @@
+---
+- name: Update apt cache
+  apt:
+    update_cache: yes
+    cache_valid_time: 3600
+
+- name: Upgrade all packages
+  apt:
+    upgrade: dist
+
+- name: Install baseline packages
+  apt:
+    name:
+      - curl
+      - git
+      - ufw
+      - fail2ban
+      - unattended-upgrades
+    state: present
+
+- name: Enable UFW and allow SSH/HTTP/HTTPS
+  ufw:
+    rule: allow
+    port: "{{ item }}"
+  loop:
+    - "22"
+    - "80"
+    - "443"
+
+- name: Enable UFW
+  ufw:
+    state: enabled
+    policy: deny
+
+- name: Set timezone
+  timezone:
+    name: Asia/Kolkata

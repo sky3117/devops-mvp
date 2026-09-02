@@ -1,0 +1,105 @@
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskmanager-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: taskuser
+      POSTGRES_PASSWORD: taskpass
+      POSTGRES_DB: taskdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks: [ backend-net ]
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U taskuser -d taskdb" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: taskmanager-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks: [ backend-net ]
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: taskmanager-api
+    restart: unless-stopped
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://taskuser:taskpass@postgres:5432/taskdb
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: dev-secret-change-in-prod
+      ALLOWED_ORIGINS: http://localhost:3000
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [ backend-net, frontend-net ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/healthz" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build: ./frontend
+    container_name: taskmanager-web
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [ frontend-net ]
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: taskmanager-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks: [ backend-net ]
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: taskmanager-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    ports:
+      - "3001:3000"
+    depends_on: [ prometheus ]
+    networks: [ backend-net ]

@@ -1,0 +1,22 @@
+backend:
+  replicas: 4
+  resources:
+    requests: { cpu: 500m, memory: 512Mi }
+    limits: { cpu: 1000m, memory: 1Gi }
+  env:
+    ENVIRONMENT: production
+    LOG_LEVEL: WARNING
+
+frontend:
+  replicas: 3
+
+autoscaling:
+  enabled: true
+  minReplicas: 4
+  maxReplicas: 20
+  targetCPUUtilization: 65
+
+ingress:
+  host: taskmanager.example.com
+  apiHost: api.taskmanager.example.com
+  tls: true

@@ -1,0 +1,52 @@
+groups:
+  - name: taskmanager-alerts
+    rules:
+      - alert: HighCPUUsage
+        expr: rate(process_cpu_seconds_total{job="taskmanager-backend"}[5m]) > 0.8
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "High CPU usage on backend"
+          description: "Backend CPU usage above 80% for 5 minutes."
+
+      - alert: HighMemoryUsage
+        expr: process_resident_memory_bytes{job="taskmanager-backend"} > 450000000
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "High memory usage on backend"
+          description: "Backend memory usage above ~450MB for 5 minutes."
+
+      - alert: PodCrashLooping
+        expr: increase(kube_pod_container_status_restarts_total{namespace="taskmanager"}[15m]) > 3
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "Pod crash looping"
+          description: "A pod in taskmanager namespace has restarted >3 times in 15 minutes."
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="taskmanager-backend", status=~"5.."}[5m]))
+          / sum(rate(http_requests_total{job="taskmanager-backend"}[5m])) > 0.05
+        for: 5m
+        labels: { severity: critical }
+        annotations:
+          summary: "High 5xx error rate"
+          description: "More than 5% of requests are failing with 5xx over 5 minutes."
+
+      - alert: HighAPILatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="taskmanager-backend"}[5m])) > 1
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "High API latency"
+          description: "p95 latency above 1s for 5 minutes."
+
+      - alert: DatabaseDown
+        expr: up{job="taskmanager-backend"} == 0
+        for: 2m
+        labels: { severity: critical }
+        annotations:
+          summary: "Backend target down"
+          description: "Prometheus cannot scrape the backend - service may be down."

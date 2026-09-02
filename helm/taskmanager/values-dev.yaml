@@ -1,0 +1,16 @@
+backend:
+  replicas: 1
+  env:
+    ENVIRONMENT: development
+    LOG_LEVEL: DEBUG
+
+frontend:
+  replicas: 1
+
+autoscaling:
+  enabled: false
+
+ingress:
+  host: dev.taskmanager.example.com
+  apiHost: dev-api.taskmanager.example.com
+  tls: false

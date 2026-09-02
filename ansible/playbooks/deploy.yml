@@ -1,0 +1,8 @@
+---
+- name: Provision and deploy TaskManager application servers
+  hosts: app_servers
+  become: yes
+  roles:
+    - common
+    - docker_install
+    - app_server

@@ -1,0 +1,31 @@
+---
+- name: Create app directory
+  file:
+    path: /opt/taskmanager
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy docker-compose file
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/taskmanager/docker-compose.yml
+  notify: Restart app stack
+
+- name: Copy environment file
+  template:
+    src: env.j2
+    dest: /opt/taskmanager/.env
+    mode: "0600"
+  notify: Restart app stack
+
+- name: Pull latest images
+  community.docker.docker_compose_v2:
+    project_src: /opt/taskmanager
+    pull: always
+  register: pull_result
+
+- name: Start application stack
+  community.docker.docker_compose_v2:
+    project_src: /opt/taskmanager
+    state: present
