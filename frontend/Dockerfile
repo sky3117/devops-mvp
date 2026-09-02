@@ -5,7 +5,7 @@ WORKDIR /app
 
 COPY package.json ./
 
-RUN npm install --omit=dev
+RUN npm install
 
 
 # ---------- Stage 2: build ----------
@@ -30,8 +30,6 @@ ENV PORT=3000
 
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
-
-COPY --from=builder /app/public ./public
 
 COPY --from=builder \
     --chown=nextjs:nodejs \
