@@ -1,6 +1,6 @@
 backend:
   image:
-    repository: ghcr.io/YOUR_GH_USERNAME/taskmanager-backend
+    repository: ghcr.io/sky3117/devops-mvp-backend
     tag: latest
   replicas: 2
   resources:
@@ -12,7 +12,7 @@ backend:
 
 frontend:
   image:
-    repository: ghcr.io/YOUR_GH_USERNAME/taskmanager-frontend
+    repository: ghcr.io/sky3117/devops-mvp-frontend
     tag: latest
   replicas: 2
   resources:

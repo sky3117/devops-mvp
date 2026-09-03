@@ -23,7 +23,7 @@ resource "aws_db_subnet_group" "main" {
 resource "aws_db_instance" "main" {
   identifier             = "${var.environment}-taskmanager-db"
   engine                 = "postgres"
-  engine_version         = "16.4"
+  engine_version         = "16.15"
   instance_class         = var.db_instance_class
   allocated_storage      = 20
   storage_type           = "gp3"

@@ -9,7 +9,7 @@ terraform {
 
   # Remote state - prevents local state file conflicts in team environments
   backend "s3" {
-    bucket         = "taskmanager-terraform-state"
+    bucket         = "taskmanager-terraform-state-652063276755"
     key            = "dev/terraform.tfstate"
     region         = "ap-south-1"
     dynamodb_table = "taskmanager-terraform-locks" # state locking
@@ -41,8 +41,8 @@ module "eks" {
   vpc_id              = module.vpc.vpc_id
   private_subnet_ids  = module.vpc.private_subnet_ids
   public_subnet_ids   = module.vpc.public_subnet_ids
-  node_desired_size   = 1
-  node_min_size       = 1
+  node_desired_size   = 2
+  node_min_size       = 2
   node_max_size       = 3
   node_instance_type  = "t3.small"
 }
