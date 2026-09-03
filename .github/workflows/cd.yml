@@ -68,6 +68,31 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug OIDC claims
+        run: |
+          TOKEN_JSON=$(curl -sS \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com")
+
+          ID_TOKEN=$(echo "$TOKEN_JSON" | jq -r '.value')
+
+          export ID_TOKEN
+
+          node - <<'NODE'
+          const token = process.env.ID_TOKEN;
+          const payload = JSON.parse(
+            Buffer.from(token.split(".")[1], "base64url").toString()
+          );
+
+          console.log("OIDC sub:", payload.sub);
+          console.log("OIDC aud:", payload.aud);
+          console.log("OIDC repository:", payload.repository);
+          console.log("OIDC repository_id:", payload.repository_id);
+          console.log("OIDC repository_owner:", payload.repository_owner);
+          console.log("OIDC repository_owner_id:", payload.repository_owner_id);
+          console.log("OIDC environment:", payload.environment);
+          NODE
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
